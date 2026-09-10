@@ -204,9 +204,58 @@
 const TARGET = { kcal: 2300, protein: 170, goal: 85, start: 100 };
 const DAYNM = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
 
+
+/* ============ الإحماء والتهدئة — مقسّمة حركة حركة ============ */
+const WARM = {
+  full:[ {a:'مارش في المكان',e:'Marching in Place',s:45,alt:'ارفع ركبك لنص المدى'},
+         {a:'دوران الأكتاف',e:'Arm Circles',s:30,alt:'دوائر صغيرة الأول ثم أكبر'},
+         {a:'دوران الحوض',e:'Hip Circles',s:30,alt:'إيدك على وسطك'},
+         {a:'سكوات بطيء لنص المدى',e:'Half Squat',s:30,alt:'امسك الحيطة'},
+         {a:'لف الجذع',e:'Torso Twists',s:25,alt:'حركة هادية من الوسط'},
+         {a:'مرجحة الرجل',e:'Leg Swings',s:20,alt:'امسك الحيطة للتوازن'} ],
+  up:[   {a:'مارش في المكان',e:'Marching in Place',s:40,alt:''},
+         {a:'دوران الأكتاف',e:'Arm Circles',s:35,alt:'الاتجاهين'},
+         {a:'لف الكتفين',e:'Shoulder Rolls',s:30,alt:'قدام وورا'},
+         {a:'تمدد القطة والبقرة',e:'Cat–Cow',s:40,alt:'حركة بطيئة مع النفس'},
+         {a:'لف الجذع',e:'Torso Twists',s:35,alt:''} ],
+  low:[  {a:'مارش في المكان',e:'Marching in Place',s:40,alt:''},
+         {a:'دوران الحوض',e:'Hip Circles',s:35,alt:'الاتجاهين'},
+         {a:'مرجحة الرجل',e:'Leg Swings',s:35,alt:'امسك الحيطة'},
+         {a:'سكوات بطيء لنص المدى',e:'Half Squat',s:35,alt:'على كرسي'},
+         {a:'رفعة حوض بطيئة',e:'Slow Glute Bridge',s:35,alt:''} ],
+  core:[ {a:'مارش في المكان',e:'Marching in Place',s:40,alt:''},
+         {a:'دوران الحوض',e:'Hip Circles',s:30,alt:''},
+         {a:'تمدد القطة والبقرة',e:'Cat–Cow',s:40,alt:'بيفك أسفل الضهر'},
+         {a:'لف الجذع',e:'Torso Twists',s:35,alt:''},
+         {a:'رفعة حوض بطيئة',e:'Slow Glute Bridge',s:35,alt:'8 عدّات'} ],
+  box:[  {a:'حركة قدم خفيفة',e:'Light Bounce',s:40,alt:'نطة صغيرة في المكان'},
+         {a:'دوران الأكتاف',e:'Arm Circles',s:30,alt:''},
+         {a:'لف الكتفين',e:'Shoulder Rolls',s:30,alt:''},
+         {a:'لف الجذع',e:'Torso Twists',s:40,alt:''},
+         {a:'لكمات خفيفة بطيئة',e:'Slow Punches',s:40,alt:'نص سرعة'} ],
+  rope:[ {a:'مارش في المكان',e:'Marching in Place',s:40,alt:''},
+         {a:'دوران الكاحل',e:'Ankle Circles',s:30,alt:'كل رجل 15 ثانية'},
+         {a:'رفع السمانة',e:'Calf Raise',s:25,alt:'امسك الحيطة'},
+         {a:'نط خفيف',e:'Easy Skipping',s:25,alt:'من غير حبل'} ]
+};
+const COOL = {
+  gen:[  {a:'مشي بطيء وتنفس عميق',e:'Slow March & Breathe',s:40,alt:'شهيق من الأنف زفير من الفم'},
+         {a:'إطالة الفخذ الخلفي',e:'Hamstring Stretch',s:40,alt:'20 ثانية لكل رجل'},
+         {a:'إطالة الصدر والأكتاف',e:'Chest & Shoulder Stretch',s:40,alt:''} ],
+  low:[  {a:'مشي بطيء وتنفس عميق',e:'Slow March & Breathe',s:40,alt:''},
+         {a:'إطالة الفخذ الأمامي',e:'Quad Stretch',s:40,alt:'20 ثانية لكل رجل'},
+         {a:'إطالة الفخذ الخلفي',e:'Hamstring Stretch',s:40,alt:'20 ثانية لكل رجل'} ],
+  up:[   {a:'مشي بطيء وتنفس عميق',e:'Slow March & Breathe',s:40,alt:''},
+         {a:'إطالة الصدر والأكتاف',e:'Chest & Shoulder Stretch',s:40,alt:''},
+         {a:'إطالة الرقبة والجانبين',e:'Neck & Side Stretch',s:40,alt:'20 ثانية لكل جهة'} ],
+  core:[ {a:'مشي بطيء وتنفس عميق',e:'Slow March & Breathe',s:40,alt:''},
+         {a:'وضعية الطفل',e:"Child's Pose",s:40,alt:'ارتاح على ركبك'},
+         {a:'تمدد القطة والبقرة',e:'Cat–Cow',s:40,alt:''} ]
+};
+
 /* ============ WORKOUTS ============ */
 const W = {
-  circuit_full: { nm:'سيركت كامل للجسم', en:'Full Body Circuit', min:23, type:'circuit',
+  circuit_full: { warmK:'full', coolK:'gen', nm:'سيركت كامل للجسم', en:'Full Body Circuit', min:21, type:'circuit',
     rounds:3, warm:180, cool:120, work:40, rest:20, rrest:60, focus:'الجسم كله',
     ex:[ {a:'سكوات', e:'Bodyweight Squat', alt:'سكوات على كرسي'},
          {a:'بوش أب', e:'Push-up', alt:'على الركب أو على الحيطة'},
@@ -214,7 +263,7 @@ const W = {
          {a:'مانتن كلايمرز', e:'Mountain Climbers', alt:'إيقاع أبطأ'},
          {a:'بلانك', e:'Plank', alt:'بلانك على الركب'} ] },
 
-  circuit_up: { nm:'سيركت علوي وكور', en:'Upper + Core', min:22, type:'circuit',
+  circuit_up: { warmK:'up', coolK:'up', nm:'سيركت علوي وكور', en:'Upper + Core', min:21, type:'circuit',
     rounds:3, warm:180, cool:120, work:40, rest:20, rrest:60, focus:'صدر وأكتاف وضهر وبطن',
     ex:[ {a:'بوش أب', e:'Push-up', alt:'على الركب'},
          {a:'بايك بوش أب', e:'Pike Push-up', alt:'ضغط أكتاف على الحيطة'},
@@ -222,7 +271,7 @@ const W = {
          {a:'سوبرمان', e:'Superman', alt:'ارفع ذراع ورجل بالتبادل'},
          {a:'رفع الرجلين', e:'Leg Raises', alt:'اثني الركب'} ] },
 
-  circuit_low: { nm:'سيركت سفلي وكور', en:'Lower + Core', min:22, type:'circuit',
+  circuit_low: { warmK:'low', coolK:'low', nm:'سيركت سفلي وكور', en:'Lower + Core', min:21, type:'circuit',
     rounds:3, warm:180, cool:120, work:40, rest:20, rrest:60, focus:'رجلين وحوض وبطن',
     ex:[ {a:'سكوات', e:'Squat', alt:'سكوات على كرسي'},
          {a:'لانجز خلفي', e:'Reverse Lunge', alt:'امسك الحيطة للتوازن'},
@@ -230,7 +279,7 @@ const W = {
          {a:'سكوات مقسوم بكرسي', e:'Split Squat', alt:'لانجز ثابت بدون كرسي'},
          {a:'بلانك جانبي', e:'Side Plank', alt:'على الركبة، 20 ثانية لكل جهة'} ] },
 
-  boxing: { nm:'شادو بوكسينج', en:'Shadow Boxing', min:20, type:'rounds',
+  boxing: { warmK:'box', coolK:'gen', nm:'شادو بوكسينج', en:'Shadow Boxing', min:17, type:'rounds',
     warm:180, cool:120, work:120, rest:30, focus:'كارديو وحرق',
     ex:[ {a:'جاب + كروس', e:'Jab – Cross', alt:'إيقاع ثابت، حرك رجليك'},
          {a:'هوك وأبركت', e:'Hook – Uppercut', alt:'لف من الوسط مش من الدراع'},
@@ -238,7 +287,7 @@ const W = {
          {a:'تفادي وحركة جانبية', e:'Slip & Move', alt:'ركب مثنية شوية'},
          {a:'جولة حرة بأقصى سرعة', e:'Freestyle Round', alt:'ادي كل اللي عندك'} ] },
 
-  core: { nm:'كور وبطن', en:'Core & Abs', min:22, type:'circuit',
+  core: { warmK:'core', coolK:'core', nm:'كور وبطن', en:'Core & Abs', min:18, type:'circuit',
     rounds:3, warm:180, cool:120, work:30, rest:20, rrest:40, focus:'بطن وضهر وثبات الجذع',
     ex:[ {a:'دِد باج', e:'Dead Bug', alt:'حرّك رجل واحدة بس والتانية ثابتة'},
          {a:'بيرد دوج', e:'Bird Dog', alt:'ارفع ذراع لوحدها أو رجل لوحدها'},
@@ -246,11 +295,11 @@ const W = {
          {a:'سحق عكسي', e:'Reverse Crunch', alt:'لمس الكعب بالأرض بالتبادل'},
          {a:'بلانك', e:'Plank', alt:'بلانك على الركب'} ] },
 
-  rope: { nm:'نط الحبل انترفال', en:'Jump Rope Intervals', min:15, type:'intervals',
+  rope: { warmK:'rope', coolK:'low', nm:'نط الحبل انترفال', en:'Jump Rope Intervals', min:14, type:'intervals',
     warm:120, cool:180, work:30, rest:30, count:10, focus:'كارديو عالي الكثافة',
     ex:[{a:'نط الحبل', e:'Jump Rope', alt:'مفيش حبل؟ نط في المكان بنفس الإيقاع'}] },
 
-  stretch: { nm:'يوم خفيف وإطالات', en:'Mobility + Stretch', min:15, type:'seq',
+  stretch: { nm:'يوم خفيف وإطالات', en:'Mobility + Stretch', min:14, type:'seq',
     focus:'استشفاء ومرونة',
     seq:[ {a:'حركة خفيفة أو مارش في المكان', e:'Light Movement', s:420},
           {a:'إطالة الفخذ الخلفي', e:'Hamstring Stretch', s:60, alt:'30 ثانية لكل رجل'},
@@ -339,6 +388,18 @@ const YT = {
   'Knee Strikes':'muay thai knee strikes basics',
   'Punch–Kick Combo':'kickboxing punch kick combo beginner',
   'Freestyle':'kickboxing shadow work beginner',
+  'Arm Circles':'arm circles warm up exercise',
+  'Hip Circles':'hip circles warm up',
+  'Shoulder Rolls':'shoulder rolls warm up',
+  'Torso Twists':'standing torso twist warm up',
+  'Leg Swings':'leg swings warm up',
+  'Ankle Circles':'ankle circles warm up',
+  'Half Squat':'half squat warm up',
+  'Slow Glute Bridge':'glute bridge proper form',
+  'Light Bounce':'boxing footwork basics',
+  'Slow Punches':'boxing jab cross technique beginner',
+  'Easy Skipping':'jump rope for beginners technique',
+  'Slow March & Breathe':'cool down breathing after workout',
   'Dead Bug':'dead bug exercise proper form',
   'Bird Dog':'bird dog exercise proper form',
   'Reverse Crunch':'reverse crunch proper form beginner',
@@ -1340,7 +1401,9 @@ function buildSteps(di){
     w.seq.forEach(x=> s.push({ph:'إطالة', a:x.a, e:x.e, alt:x.alt||'', t:x.s, rest:false}));
     return s;
   }
-  if(w.warm) s.push({ph:'إحماء', a:'إحماء', e:'Warm-up', alt:'مارش في المكان ودوران مفاصل', t:w.warm, rest:false});
+  if(w.warmK && WARM[w.warmK])
+    WARM[w.warmK].forEach((x,j)=> s.push({ph:`إحماء ${j+1} من ${WARM[w.warmK].length}`, a:x.a, e:x.e, alt:x.alt, t:x.s, rest:false}));
+  else if(w.warm) s.push({ph:'إحماء', a:'إحماء', e:'Warm-up', alt:'', t:w.warm, rest:false});
   if(w.type==='circuit'){
     for(let r=1;r<=w.rounds;r++){
       w.ex.forEach((x,j)=>{
@@ -1362,7 +1425,9 @@ function buildSteps(di){
       if(j<w.count) s.push({ph:'راحة', a:'راحة', e:'Rest', alt:'', t:w.rest, rest:true});
     }
   }
-  if(w.cool) s.push({ph:'تهدئة', a:'تهدئة وإطالة', e:'Cool-down', alt:'تنفس عميق', t:w.cool, rest:true});
+  if(w.coolK && COOL[w.coolK])
+    COOL[w.coolK].forEach((x,j)=> s.push({ph:`تهدئة ${j+1} من ${COOL[w.coolK].length}`, a:x.a, e:x.e, alt:x.alt, t:x.s, rest:true, soft:true}));
+  else if(w.cool) s.push({ph:'تهدئة', a:'تهدئة وإطالة', e:'Cool-down', alt:'', t:w.cool, rest:true});
   return s;
 }
 
@@ -1379,7 +1444,7 @@ function paint(){
   document.getElementById('tmExE').textContent = st.a;
   document.getElementById('tmAlt').textContent = st.alt && st.alt!=='—' ? 'أسهل: '+st.alt : '';
   const yt = document.getElementById('tmYt');
-  if(st.rest){ yt.style.display='none'; }
+  if(st.rest && !st.soft){ yt.style.display='none'; }
   else { yt.style.display='inline-block'; yt.href = ytUrl(st.e); }
   const nx = T.steps[T.i+1];
   document.getElementById('tmNx').textContent = nx ? 'الجاي: '+nx.e : 'آخر خطوة';
