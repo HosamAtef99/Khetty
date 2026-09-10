@@ -107,7 +107,7 @@
     flex-direction:column;padding:22px 20px max(22px,env(safe-area-inset-bottom));text-align:center}
   #tm.show{display:flex}
   #tm .ph{font-size:13px;opacity:.75;letter-spacing:1px}
-  #tm .ex{font-size:28px;font-weight:700;margin:8px 0 2px;line-height:1.35}
+  #tm .ex{direction:ltr;font-size:26px;font-weight:700;margin:8px 0 2px;line-height:1.35}
   #tm .exe{font-size:13px;opacity:.7}
   #tm .cd{font-size:76px;font-weight:800;line-height:1;margin:22px 0;font-variant-numeric:tabular-nums}
   #tm .nx{font-size:13.5px;opacity:.8;min-height:22px}
@@ -143,6 +143,14 @@
   .res .big span{font-size:11.5px;color:var(--mut)}
   .res .bd{padding:13px 15px;font-size:13.5px;line-height:1.7}
   .res .bd .k{color:var(--a);font-weight:700;font-size:12px;display:block;margin-top:9px}
+  .exrow{display:flex;align-items:center;gap:9px;padding:11px 0;border-bottom:1px solid #F0ECE4}
+  .exrow:last-of-type{border:none}
+  .exi{flex:1;min-width:0}
+  .exi b{display:block;font-size:14.5px}
+  .altbox{background:var(--cream);border-radius:11px;padding:11px;margin:0 0 10px}
+  .altrow{display:flex;align-items:center;gap:9px;padding:9px 10px;background:#fff;
+    border:1px solid var(--line);border-radius:9px;margin-bottom:6px;cursor:pointer}
+  .altrow b{font-size:13.5px}
   .stp{width:26px;height:26px;border:1px solid var(--line);background:#fff;border-radius:7px;
     font-size:15px;line-height:1;color:var(--g);font-family:inherit;cursor:pointer;vertical-align:middle}
   .spin{text-align:center;padding:26px;color:var(--mut);font-size:13.5px}
@@ -230,13 +238,13 @@ const W = {
          {a:'تفادي وحركة جانبية', e:'Slip & Move', alt:'ركب مثنية شوية'},
          {a:'جولة حرة بأقصى سرعة', e:'Freestyle Round', alt:'ادي كل اللي عندك'} ] },
 
-  kick: { nm:'كيك بوكسينج', en:'Kickboxing', min:20, type:'rounds',
-    warm:180, cool:120, work:120, rest:30, focus:'كارديو وتوازن',
-    ex:[ {a:'لكمات مع ركلة أمامية', e:'Punches + Front Kick', alt:'امسك حاجة للتوازن لو محتاج'},
-         {a:'ركلة دائرية بالتبادل', e:'Roundhouse Kick', alt:'ارفع الركبة الأول'},
-         {a:'ضربات الركبة', e:'Knee Strikes', alt:'شد بطنك مع كل ضربة'},
-         {a:'كومبو أيدي ورجل', e:'Punch–Kick Combo', alt:'ببطء الأول'},
-         {a:'جولة حرة', e:'Freestyle', alt:'حرك رجليك طول الوقت'} ] },
+  core: { nm:'كور وبطن', en:'Core & Abs', min:22, type:'circuit',
+    rounds:3, warm:180, cool:120, work:30, rest:20, rrest:40, focus:'بطن وضهر وثبات الجذع',
+    ex:[ {a:'دِد باج', e:'Dead Bug', alt:'حرّك رجل واحدة بس والتانية ثابتة'},
+         {a:'بيرد دوج', e:'Bird Dog', alt:'ارفع ذراع لوحدها أو رجل لوحدها'},
+         {a:'رفعة الحوض', e:'Glute Bridge', alt:'ارفع لنص المدى بس'},
+         {a:'سحق عكسي', e:'Reverse Crunch', alt:'لمس الكعب بالأرض بالتبادل'},
+         {a:'بلانك', e:'Plank', alt:'بلانك على الركب'} ] },
 
   rope: { nm:'نط الحبل انترفال', en:'Jump Rope Intervals', min:15, type:'intervals',
     warm:120, cool:180, work:30, rest:30, count:10, focus:'كارديو عالي الكثافة',
@@ -300,7 +308,7 @@ const DAYS = {
   1:{w:'circuit_up',   m:'mon', note:null},
   2:{w:'rope',         m:'tue', note:null},
   3:{w:'circuit_low',  m:'wed', note:null},
-  4:{w:'kick',         m:'thu', note:null},
+  4:{w:'core',         m:'thu', note:null},
   5:{w:'stretch',      m:'fam', note:'بيت الوالدة'}
 };
 const ORDER = [6,0,1,2,3,4,5];
@@ -331,6 +339,9 @@ const YT = {
   'Knee Strikes':'muay thai knee strikes basics',
   'Punch–Kick Combo':'kickboxing punch kick combo beginner',
   'Freestyle':'kickboxing shadow work beginner',
+  'Dead Bug':'dead bug exercise proper form',
+  'Bird Dog':'bird dog exercise proper form',
+  'Reverse Crunch':'reverse crunch proper form beginner',
   'Jump Rope':'jump rope for beginners technique',
   'Hamstring Stretch':'hamstring stretch how to',
   'Quad Stretch':'standing quad stretch how to',
@@ -405,7 +416,7 @@ const FOODS = [
 ];
 
 /* ============ STATE ============ */
-let S = { log:{}, weights:[], hist:[] };
+let S = { log:{}, weights:[], hist:[], wex:{}, wday:{} };
 let TAB = 'today';
 const KEY = 'plan:progress';
 
@@ -419,7 +430,7 @@ async function load(){
     let raw = null;
     if(HAS_CS){ const r = await window.storage.get(KEY); raw = r && r.value; }
     else { raw = localStorage.getItem(KEY); }
-    if(raw){ const o = JSON.parse(raw); S.log=o.log||{}; S.weights=o.weights||[]; S.hist=o.hist||[]; }
+    if(raw){ const o = JSON.parse(raw); S.log=o.log||{}; S.weights=o.weights||[]; S.hist=o.hist||[]; S.wex=o.wex||{}; S.wday=o.wday||{}; }
   }catch(e){ /* first run */ }
 }
 let saveT=null;
@@ -444,7 +455,7 @@ function importData(){
   if(!box || !box.value.trim()) return;
   try{
     const o = JSON.parse(box.value.trim());
-    S.log = o.log||{}; S.weights = o.weights||[]; S.hist = o.hist||[];
+    S.log = o.log||{}; S.weights = o.weights||[]; S.hist = o.hist||[]; S.wex = o.wex||{}; S.wday = o.wday||{};
     save(); alert('البيانات اتنقلت بنجاح'); render();
   }catch(e){ alert('النص مش مظبوط — انسخ الكود كامل من النسخة التانية'); }
 }
@@ -501,7 +512,7 @@ function head(sub, title){
 }
 
 function vToday(){
-  const di = dayIdx(), plan = DAYS[di], w = W[plan.w], meals = M[plan.m];
+  const di = dayIdx(), plan = DAYS[di], w = workoutOf(di), meals = M[plan.m];
   const e = entry(today());
   let k=0,p=0;
   meals.forEach((_,i)=>{ if(e.m[i]){ const m=mealNow(meals,i,e); k+=m.k; p+=m.p; } });
@@ -513,9 +524,9 @@ function vToday(){
 
   h += `<div class="card wk">
     <h3>تمرين الصبح</h3>
-    <div class="nm">${w.nm}</div><div class="en">${w.en}</div>
+    <div class="nm" dir="ltr">${w.en}</div><div class="en">${w.nm}</div>
     <div class="meta">${w.min} دقيقة · ${w.focus}</div>
-    <button class="btn ${e.w?'done':''}" onclick="${e.w?`toggleW()`:`startW('${plan.w}')`}">
+    <button class="btn ${e.w?'done':''}" onclick="${e.w?`toggleW()`:`startW(${di})`}">
       ${e.w ? '✓ اتعمل النهاردة — إعادة؟' : 'ابدأ التمرين'}</button>
   </div>`;
 
@@ -558,37 +569,101 @@ function vToday(){
   return h;
 }
 
+let WK = { day:null, swap:null };
+function openDay(i){ WK.day=i; WK.swap=null; render(); window.scrollTo(0,0); }
+function backDays(){ WK.day=null; WK.swap=null; render(); }
+function openExSwap(i){ WK.swap = (WK.swap===i ? null : i); render(); }
+
+function applyEx(di, idx, en){
+  if(!S.wex) S.wex = {};
+  if(!S.wex[di]) S.wex[di] = {};
+  S.wex[di][idx] = en;
+  WK.swap = null; save(); render();
+}
+function resetDay(di){
+  if(S.wex) delete S.wex[di];
+  if(S.wday) delete S.wday[di];
+  WK.swap = null; save(); render();
+}
+function setWholeDay(di, keyName){
+  if(!S.wday) S.wday = {};
+  if(keyName === DAYS[di].w) delete S.wday[di]; else S.wday[di] = keyName;
+  if(S.wex) delete S.wex[di];
+  WK.swap = null; save(); render();
+}
+
 function vWeek(){
-  let h = head('برنامج التمارين', 'الأسبوع');
+  if(WK.day !== null) return vDay(WK.day);
+  let h = head('برنامج التمارين — اضغط على أي يوم للتبديل', 'الأسبوع');
   h += `<div style="padding:0 16px;margin-top:14px">`;
   const di = dayIdx();
   ORDER.forEach(i=>{
-    const p = DAYS[i], w = W[p.w];
-    h += `<div class="drow ${i===di?'today':''}" onclick="startW('${p.w}')">
+    const w = workoutOf(i);
+    h += `<div class="drow ${i===di?'today':''}" onclick="openDay(${i})">
       <div class="dd">${DAYNM[i]}</div>
-      <div class="di"><b>${w.nm}</b><span>${w.en} · ${w.focus}</span></div>
-      <div class="dm">${w.min} د</div></div>`;
+      <div class="di"><b dir="ltr" style="text-align:right">${w.en}${isEdited(i)?' <span style="color:var(--a);font-size:11px">معدّل</span>':''}</b>
+        <span>${w.nm} · ${w.focus}</span></div>
+      <div class="dm">${w.min} د ›</div></div>`;
   });
   h += `</div>`;
   h += `<div class="card"><h3>قواعد قبل ما تبدأ</h3>
     <div style="font-size:13.5px;line-height:1.75">
-    • الإحماء مش اختياري.<br>
-    • كل تمرين فيه بديل أسهل — هيظهرلك أثناء التمرين.<br>
+    • الإحماء مش اختياري — التطبيق بيبدأ بيه تلقائي.<br>
+    • كل تمرين فيه بديل أسهل بيظهرلك أثناء الشغل.<br>
     • أول أسبوعين: دورتين بدل تلاتة لحد ما جسمك يتعوّد.<br>
     • ألم حاد (مش تعب عضلي عادي) = وقّف فوراً.</div></div>`;
-  h += `<h2 class="sec">تفاصيل التمارين</h2>`;
-  ORDER.forEach(i=>{
-    const w = W[DAYS[i].w];
-    h += `<div class="card"><h3>${w.nm}<span class="tag">${w.min} دقيقة</span></h3>`;
-    if(w.type==='circuit') h+=`<div class="muted" style="margin-bottom:8px">${w.rounds} دورات · ${w.work} ثانية شغل / ${w.rest} ثانية راحة</div>`;
-    if(w.type==='rounds')  h+=`<div class="muted" style="margin-bottom:8px">${w.ex.length} جولات · دقيقتين شغل / ${w.rest} ثانية راحة</div>`;
-    if(w.type==='intervals')h+=`<div class="muted" style="margin-bottom:8px">${w.count} جولات · ${w.work} ثانية نط / ${w.rest} ثانية راحة</div>`;
-    h += `<div class="tw"><table><tr><th>التمرين</th><th>English</th><th>شرح</th></tr>`;
-    (w.ex||w.seq).forEach(x=>{ h+=`<tr><td>${x.a}${x.alt&&x.alt!=='—'?'<div class="muted" style="font-size:11.5px">'+x.alt+'</div>':''}</td>
-      <td class="muted" style="font-size:12px">${x.e}</td>
-      <td style="width:52px"><a class="yt" href="${ytUrl(x.e)}" target="_blank" rel="noopener">▶ شوف</a></td></tr>`; });
-    h += `</table></div></div>`;
+  return h;
+}
+
+function vDay(di){
+  const w = workoutOf(di), list = w.ex || w.seq || [];
+  let h = `<div class="hd"><div class="dt" onclick="backDays()" style="cursor:pointer">‹ رجوع للأسبوع</div>
+    <h1>${DAYNM[di]}</h1></div>`;
+
+  h += `<div class="card wk">
+    <div class="nm" dir="ltr">${w.en}</div><div class="en">${w.nm}</div>
+    <div class="meta">${w.min} دقيقة · ${w.focus}</div>
+    <button class="btn" onclick="startW(${di})">ابدأ التمرين</button>
+  </div>`;
+
+  h += `<div class="card"><h3>التمارين<span class="tag">اضغط بدّل لتغيير أي واحد</span></h3>`;
+  list.forEach((x,i)=>{
+    const lv = lvlOf(x.e), g = groupOf(x.e);
+    h += `<div class="exrow">
+      <div class="exi">
+        <b dir="ltr" style="text-align:right">${x.e}</b>
+        <span class="muted" style="font-size:11.5px">${x.a} · ${GRPNM[g]} · ${LVLNM[lv]}</span>
+      </div>
+      <a class="yt" href="${ytUrl(x.e)}" target="_blank" rel="noopener">▶</a>
+      <button class="swbtn" onclick="openExSwap(${i})">${WK.swap===i?'إغلاق':'بدّل'}</button>
+    </div>`;
+    if(WK.swap === i){
+      const alts = altsFor(x.e);
+      h += `<div class="altbox"><div class="muted" style="margin-bottom:7px">بدائل من نفس المجموعة (${GRPNM[g]}):</div>`;
+      alts.forEach(al=>{
+        const tag = al.lvl < lv ? '<span style="color:var(--g)">أسهل</span>'
+                  : al.lvl > lv ? '<span style="color:var(--bad)">أصعب</span>'
+                  : '<span class="muted">نفس المستوى</span>';
+        h += `<div class="altrow" onclick="applyEx(${di},${i},'${al.e.replace(/'/g,"\\'")}')">
+          <div style="flex:1;min-width:0"><b dir="ltr" style="text-align:right;display:block">${al.e}</b>
+            <span class="muted" style="font-size:11px;display:block">${al.a}${al.imp==='high'?' · فيه قفز':''}</span></div>
+          <div style="font-size:11.5px;white-space:nowrap">${tag}</div>
+        </div>`;
+      });
+      h += `</div>`;
+    }
   });
+  h += `</div>`;
+
+  h += `<div class="card"><h3>غيّر التمرين كله</h3>
+    <div class="muted" style="margin-bottom:8px">استبدل يوم ${DAYNM[di]} بنوع تمرين تاني:</div><div>`;
+  Object.keys(W).forEach(kn=>{
+    const cur = (S.wday && S.wday[di]) || DAYS[di].w;
+    h += `<button class="pill ${cur===kn?'on':''}" onclick="setWholeDay(${di},'${kn}')">${W[kn].en}</button>`;
+  });
+  h += `</div></div>`;
+
+  if(isEdited(di)) h += `<div style="padding:0 16px"><button class="btn btn3" onclick="resetDay(${di})">رجّع يوم ${DAYNM[di]} للأصلي</button></div>`;
   return h;
 }
 
@@ -737,6 +812,114 @@ function chart(ws){
     <text x="${pd}" y="${H-6}" fill="#7A8287" font-size="10">${ws[0].d.slice(5)}</text>
     <text x="${W_-pd}" y="${H-6}" fill="#7A8287" font-size="10" text-anchor="end">${ws[ws.length-1].d.slice(5)}</text>
   </svg>`;
+}
+
+/* ============ EXERCISE BANK ============
+   g = المجموعة | lvl = 1 سهل / 2 متوسط / 3 صعب | imp = 'low' مفيش قفز       */
+const EXB = [
+/* --- دفع: صدر وأكتاف وترايسبس --- */
+{a:'بوش أب على الحيطة',e:'Wall Push-up',g:'push',lvl:1,imp:'low',alt:'قرّب رجليك من الحيطة'},
+{a:'بوش أب مائل على كرسي',e:'Incline Push-up',g:'push',lvl:1,imp:'low',alt:'استخدم سطح أعلى'},
+{a:'بوش أب على الركب',e:'Knee Push-up',g:'push',lvl:1,imp:'low',alt:'حط مخدة تحت ركبك'},
+{a:'بوش أب',e:'Push-up',g:'push',lvl:2,imp:'low',alt:'على الركب أو على الحيطة'},
+{a:'بوش أب واسع',e:'Wide Push-up',g:'push',lvl:2,imp:'low',alt:'على الركب'},
+{a:'ضغط أكتاف على الحيطة',e:'Wall Shoulder Press',g:'push',lvl:1,imp:'low',alt:'—'},
+{a:'ديب على كرسي',e:'Chair Dips',g:'push',lvl:2,imp:'low',alt:'اثني ركبك وقرّب رجليك'},
+{a:'بايك بوش أب',e:'Pike Push-up',g:'push',lvl:3,imp:'low',alt:'ضغط أكتاف على الحيطة'},
+{a:'بوش أب ماسي',e:'Diamond Push-up',g:'push',lvl:3,imp:'low',alt:'على الركب'},
+
+/* --- رجلين وحوض --- */
+{a:'رفع السمانة',e:'Calf Raise',g:'legs',lvl:1,imp:'low',alt:'امسك الحيطة'},
+{a:'رفعة الحوض',e:'Glute Bridge',g:'legs',lvl:1,imp:'low',alt:'ارفع لنص المدى'},
+{a:'سكوات على كرسي',e:'Chair Squat',g:'legs',lvl:1,imp:'low',alt:'استخدم كرسي أعلى'},
+{a:'سكوات',e:'Squat',g:'legs',lvl:2,imp:'low',alt:'سكوات على كرسي'},
+{a:'سكوات حائط ثابت',e:'Wall Sit',g:'legs',lvl:2,imp:'low',alt:'انزل لنص المدى'},
+{a:'لانجز بالتبادل',e:'Alternating Lunge',g:'legs',lvl:2,imp:'low',alt:'خطوة أقصر بمسك الحيطة'},
+{a:'لانجز خلفي',e:'Reverse Lunge',g:'legs',lvl:2,imp:'low',alt:'امسك الحيطة للتوازن'},
+{a:'خطوة على الدرج',e:'Step-up',g:'legs',lvl:2,imp:'low',alt:'درجة أوطى'},
+{a:'سكوات مقسوم بكرسي',e:'Split Squat',g:'legs',lvl:3,imp:'low',alt:'لانجز ثابت بدون كرسي'},
+{a:'رفعة حوض برجل واحدة',e:'Single-Leg Glute Bridge',g:'legs',lvl:3,imp:'low',alt:'رفعة حوض عادية'},
+{a:'سكوات قفز',e:'Jump Squat',g:'legs',lvl:3,imp:'high',alt:'سكوات عادي بسرعة'},
+
+/* --- كور وبطن --- */
+{a:'ركبة للصدر واقف',e:'Standing Knee Raise',g:'core',lvl:1,imp:'low',alt:'امسك الحيطة'},
+{a:'سحق جانبي واقف',e:'Standing Oblique Crunch',g:'core',lvl:1,imp:'low',alt:'—'},
+{a:'لمس الكعب',e:'Heel Taps',g:'core',lvl:1,imp:'low',alt:'—'},
+{a:'دِد باج',e:'Dead Bug',g:'core',lvl:1,imp:'low',alt:'حرّك رجل واحدة بس'},
+{a:'بيرد دوج',e:'Bird Dog',g:'core',lvl:1,imp:'low',alt:'ارفع ذراع لوحدها أو رجل لوحدها'},
+{a:'بلانك على الركب',e:'Knee Plank',g:'core',lvl:1,imp:'low',alt:'—'},
+{a:'بلانك',e:'Plank',g:'core',lvl:2,imp:'low',alt:'بلانك على الركب'},
+{a:'بلانك جانبي',e:'Side Plank',g:'core',lvl:2,imp:'low',alt:'على الركبة'},
+{a:'سحق عكسي',e:'Reverse Crunch',g:'core',lvl:2,imp:'low',alt:'لمس الكعب بالأرض'},
+{a:'بلانك مع لمس الأكتاف',e:'Plank Shoulder Taps',g:'core',lvl:3,imp:'low',alt:'على الركب'},
+{a:'رفع الرجلين',e:'Leg Raises',g:'core',lvl:3,imp:'low',alt:'اثني الركب'},
+{a:'هولو هولد',e:'Hollow Hold',g:'core',lvl:3,imp:'low',alt:'اثني الركب وقرّب الرجلين'},
+
+/* --- ضهر --- */
+{a:'شد لوح الكتف',e:'Scapular Squeeze',g:'back',lvl:1,imp:'low',alt:'—'},
+{a:'سوبرمان',e:'Superman',g:'back',lvl:1,imp:'low',alt:'ارفع ذراع ورجل بالتبادل'},
+{a:'سباحة أرضية',e:'Swimmers',g:'back',lvl:2,imp:'low',alt:'حركة أبطأ'},
+{a:'بيرد دوج للضهر',e:'Bird Dog Hold',g:'back',lvl:2,imp:'low',alt:'ثبات أقصر'},
+
+/* --- كارديو --- */
+{a:'مارش في المكان',e:'Marching in Place',g:'cardio',lvl:1,imp:'low',alt:'—'},
+{a:'ستيب تاتش',e:'Step Touch',g:'cardio',lvl:1,imp:'low',alt:'—'},
+{a:'ملاكمة بالأيدي واقف',e:'Standing Punches',g:'cardio',lvl:1,imp:'low',alt:'إيقاع أبطأ'},
+{a:'ركبة عالية',e:'High Knees',g:'cardio',lvl:2,imp:'high',alt:'مارش سريع بدل الجري'},
+{a:'ركل الكعب',e:'Butt Kicks',g:'cardio',lvl:2,imp:'high',alt:'في المكان ببطء'},
+{a:'جامبينج جاك',e:'Jumping Jacks',g:'cardio',lvl:2,imp:'high',alt:'جاك بدون قفز (خطوة جانبية)'},
+{a:'شادو بوكسينج',e:'Shadow Boxing',g:'cardio',lvl:2,imp:'low',alt:'أيدي بس من غير حركة رجل'},
+{a:'صعود الدرج',e:'Stair Climb',g:'cardio',lvl:2,imp:'low',alt:'إيقاع أبطأ'},
+{a:'نط الحبل',e:'Jump Rope',g:'cardio',lvl:2,imp:'high',alt:'نط في المكان من غير حبل'},
+{a:'بيربي بدون قفز',e:'Half Burpee',g:'cardio',lvl:2,imp:'low',alt:'من وضع الوقوف للبلانك ببطء'},
+{a:'مانتن كلايمرز',e:'Mountain Climbers',g:'cardio',lvl:3,imp:'low',alt:'إيقاع أبطأ'},
+{a:'بيربي',e:'Burpee',g:'cardio',lvl:3,imp:'high',alt:'بيربي بدون قفز'},
+
+/* --- بوكسينج (جولات) --- */
+{a:'جاب + كروس',e:'Jab – Cross',g:'cardio',lvl:2,imp:'low',alt:'إيقاع ثابت، حرك رجليك'},
+{a:'هوك وأبركت',e:'Hook – Uppercut',g:'cardio',lvl:2,imp:'low',alt:'لف من الوسط مش من الدراع'},
+{a:'كومبو 1-2-3 مع حركة',e:'Combo + Move',g:'cardio',lvl:2,imp:'low',alt:'اتحرك بين الكومبوهات'},
+{a:'تفادي وحركة جانبية',e:'Slip & Move',g:'cardio',lvl:2,imp:'low',alt:'ركب مثنية شوية'},
+{a:'جولة حرة بأقصى سرعة',e:'Freestyle Round',g:'cardio',lvl:2,imp:'low',alt:'ادي كل اللي عندك'},
+
+/* --- إطالات --- */
+{a:'حركة خفيفة أو مارش في المكان',e:'Light Movement',g:'stretch',lvl:1,imp:'low',alt:''},
+{a:'إطالة الفخذ الخلفي',e:'Hamstring Stretch',g:'stretch',lvl:1,imp:'low',alt:'30 ثانية لكل رجل'},
+{a:'إطالة الفخذ الأمامي',e:'Quad Stretch',g:'stretch',lvl:1,imp:'low',alt:'30 ثانية لكل رجل'},
+{a:'إطالة الصدر والأكتاف',e:'Chest & Shoulder Stretch',g:'stretch',lvl:1,imp:'low',alt:''},
+{a:'إطالة الحوض',e:'Hip Flexor Stretch',g:'stretch',lvl:1,imp:'low',alt:'30 ثانية لكل جهة'},
+{a:"وضعية الطفل",e:"Child's Pose",g:'stretch',lvl:1,imp:'low',alt:''},
+{a:'تمدد القطة والبقرة',e:'Cat–Cow',g:'stretch',lvl:1,imp:'low',alt:''},
+{a:'تويست جالس',e:'Seated Twist',g:'stretch',lvl:1,imp:'low',alt:'30 ثانية لكل جهة'},
+{a:'إطالة الرقبة والجانبين',e:'Neck & Side Stretch',g:'stretch',lvl:1,imp:'low',alt:''}
+];
+
+const LVLNM = {1:'سهل', 2:'متوسط', 3:'صعب'};
+const GRPNM = {push:'صدر وأكتاف', legs:'رجلين وحوض', core:'كور وبطن', back:'ضهر', cardio:'كارديو', stretch:'إطالة'};
+
+function exByEn(en){ return EXB.find(x=> x.e === en) || null; }
+function groupOf(en){ const x = exByEn(en); return x ? x.g : 'cardio'; }
+function lvlOf(en){ const x = exByEn(en); return x ? x.lvl : 2; }
+function altsFor(en){
+  const g = groupOf(en);
+  return EXB.filter(x=> x.g === g && x.e !== en).sort((a,b)=> a.lvl - b.lvl);
+}
+
+/* ---- التمرين بعد أي تبديل حفظه المستخدم ---- */
+function workoutOf(di){
+  const base = W[ (S.wday && S.wday[di]) || DAYS[di].w ];
+  const ov = S.wex && S.wex[di];
+  if(!ov) return base;
+  const list = (base.ex || base.seq || []).map((x,i)=>{
+    const rep = ov[i] && exByEn(ov[i]);
+    return rep ? {a:rep.a, e:rep.e, alt:rep.alt} : x;
+  });
+  const out = Object.assign({}, base);
+  if(base.ex) out.ex = list; else out.seq = list;
+  return out;
+}
+function isEdited(di){
+  return !!((S.wday && S.wday[di]) || (S.wex && S.wex[di] && Object.keys(S.wex[di]).length));
 }
 
 /* ============ FOOD BANK (offline) ============
@@ -1151,8 +1334,8 @@ function delW(d){ S.weights = S.weights.filter(x=>x.d!==d); save(); render(); }
 /* ============ TIMER ============ */
 let T = { steps:[], i:0, left:0, id:null, paused:false, key:null };
 
-function buildSteps(k){
-  const w = W[k], s = [];
+function buildSteps(di){
+  const w = workoutOf(di), s = [];
   if(w.type==='seq'){
     w.seq.forEach(x=> s.push({ph:'إطالة', a:x.a, e:x.e, alt:x.alt||'', t:x.s, rest:false}));
     return s;
@@ -1183,8 +1366,8 @@ function buildSteps(k){
   return s;
 }
 
-function startW(k){
-  T.key=k; T.steps=buildSteps(k); T.i=0; T.left=T.steps[0].t; T.paused=false;
+function startW(di){
+  T.key=di; T.steps=buildSteps(di); T.i=0; T.left=T.steps[0].t; T.paused=false;
   document.getElementById('tm').classList.add('show');
   paint(); clearInterval(T.id); T.id=setInterval(tick,1000);
 }
@@ -1192,14 +1375,14 @@ function paint(){
   const st = T.steps[T.i], tm = document.getElementById('tm');
   tm.classList.toggle('rest', !!st.rest);
   document.getElementById('tmPh').textContent = st.ph;
-  document.getElementById('tmEx').textContent = st.a;
-  document.getElementById('tmExE').textContent = st.e;
+  document.getElementById('tmEx').textContent = st.e;
+  document.getElementById('tmExE').textContent = st.a;
   document.getElementById('tmAlt').textContent = st.alt && st.alt!=='—' ? 'أسهل: '+st.alt : '';
   const yt = document.getElementById('tmYt');
   if(st.rest){ yt.style.display='none'; }
   else { yt.style.display='inline-block'; yt.href = ytUrl(st.e); }
   const nx = T.steps[T.i+1];
-  document.getElementById('tmNx').textContent = nx ? 'الجاي: '+nx.a : 'آخر خطوة';
+  document.getElementById('tmNx').textContent = nx ? 'الجاي: '+nx.e : 'آخر خطوة';
   document.getElementById('tmCnt').textContent = `${T.i+1} من ${T.steps.length}`;
   const m=Math.floor(T.left/60), s=T.left%60;
   document.getElementById('tmCd').textContent = m>0 ? m+':'+String(s).padStart(2,'0') : String(s).padStart(2,'0');
