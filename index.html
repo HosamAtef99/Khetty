@@ -186,6 +186,7 @@
   <div class="cnt" id="tmCnt"></div>
   <div class="ctl">
     <button onclick="tmQuit()">إنهاء</button>
+    <button id="tmSnd" onclick="toggleSnd()" style="flex:0 0 52px">🔊</button>
     <button class="main" id="tmPause" onclick="tmToggle()">إيقاف مؤقت</button>
     <button onclick="tmSkip()">تخطي</button>
   </div>
@@ -1392,6 +1393,48 @@ function addW(){
 }
 function delW(d){ S.weights = S.weights.filter(x=>x.d!==d); save(); render(); }
 
+
+/* ============ الصوت: عدّ تنازلي وصفارة التبديل ============ */
+let AC = null, SND = true;
+function initAudio(){
+  if(AC) return;
+  try{ AC = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){ AC = null; }
+}
+function beep(freq, ms, vol){
+  if(!SND) return;
+  try{
+    initAudio(); if(!AC) return;
+    if(AC.state === 'suspended') AC.resume();
+    const o = AC.createOscillator(), g = AC.createGain();
+    o.type = 'sine'; o.frequency.value = freq;
+    o.connect(g); g.connect(AC.destination);
+    const t = AC.currentTime;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol||0.28, t + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + ms/1000);
+    o.start(t); o.stop(t + ms/1000 + 0.02);
+  }catch(e){}
+}
+function tickBeep(){ beep(880, 110); if(navigator.vibrate) navigator.vibrate(60); }        // تيت
+function goBeep(){                                                                          // بدأ تمرين
+  beep(1320, 320, 0.34);
+  if(navigator.vibrate) navigator.vibrate([200,70,200]);
+}
+function restBeep(){                                                                        // راحة
+  beep(520, 300, 0.3);
+  if(navigator.vibrate) navigator.vibrate(220);
+}
+function doneBeep(){
+  beep(880, 200, 0.34); setTimeout(()=>beep(1100, 200, 0.34), 220); setTimeout(()=>beep(1320, 420, 0.36), 450);
+  if(navigator.vibrate) navigator.vibrate([200,90,200,90,380]);
+}
+function toggleSnd(){
+  SND = !SND;
+  const b = document.getElementById('tmSnd');
+  if(b) b.textContent = SND ? '🔊' : '🔇';
+  if(SND) beep(880, 120);
+}
+
 /* ============ TIMER ============ */
 let T = { steps:[], i:0, left:0, id:null, paused:false, key:null };
 
@@ -1432,6 +1475,8 @@ function buildSteps(di){
 }
 
 function startW(di){
+  initAudio(); if(AC && AC.state==='suspended') AC.resume();
+  beep(1320, 150);
   T.key=di; T.steps=buildSteps(di); T.i=0; T.left=T.steps[0].t; T.paused=false;
   document.getElementById('tm').classList.add('show');
   paint(); clearInterval(T.id); T.id=setInterval(tick,1000);
@@ -1456,10 +1501,11 @@ function paint(){
 function tick(){
   if(T.paused) return;
   T.left--;
+  if(T.left > 0 && T.left <= 3) tickBeep();            // تيت تيت تيت
   if(T.left<=0){
-    if(navigator.vibrate) navigator.vibrate(180);
-    if(T.i >= T.steps.length-1){ finishW(); return; }
+    if(T.i >= T.steps.length-1){ doneBeep(); finishW(); return; }
     T.i++; T.left = T.steps[T.i].t;
+    T.steps[T.i].rest ? restBeep() : goBeep();          // صوت مختلف: شغل ولا راحة
   }
   paint();
 }
